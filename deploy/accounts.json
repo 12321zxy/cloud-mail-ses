@@ -1,1 +1,10 @@
-[{"environment":"cf-main","name":"cloud-mail"}]
+[
+  {
+    "environment": "cf-main",
+    "name": "cloud-mail"
+  },
+  {
+    "environment": "us43",
+    "name": "cloud-mail"
+  }
+]
