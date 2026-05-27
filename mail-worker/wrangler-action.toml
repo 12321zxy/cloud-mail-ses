@@ -50,4 +50,4 @@ linuxdo_callback_url = "${LINUXDO_CALLBACK_URL}"
 linuxdo_switch = "${LINUXDO_SWITCH}"
 
 [build]
-command = "pnpm --prefix ../mail-vue install && pnpm --prefix ../mail-vue run build"
+command = "cd ../mail-vue && pnpm install --frozen-lockfile && node node_modules/vite/bin/vite.js build --mode release && test -f ../mail-worker/dist/index.html"

@@ -109,6 +109,20 @@ jobs:
         working-directory: mail-vue
         run: pnpm install --frozen-lockfile
 
+      - name: Build frontend to mail-worker/dist
+        working-directory: mail-vue
+        run: |
+          set -e
+          pnpm install --frozen-lockfile
+          node node_modules/vite/bin/vite.js build --mode release
+          if [ ! -f ../mail-worker/dist/index.html ]; then
+            echo '[ERR] mail-worker/dist 未生成，请检查 mail-vue 构建'
+            ls -la mail-worker/dist 2>/dev/null || true
+            ls -la mail-vue/dist 2>/dev/null || true
+            exit 1
+          fi
+          echo '[OK] 前端静态资源: mail-worker/dist'
+
       - name: Prepare wrangler config
         working-directory: mail-worker
         run: |
@@ -192,6 +206,11 @@ jobs:
         id: deploy
         working-directory: mail-worker
         run: |
+          set -e
+          if [ ! -f dist/index.html ]; then
+            echo '[ERR] 缺少 dist/index.html，请先完成前端构建'
+            exit 1
+          fi
           set -o pipefail
           pnpm wrangler deploy -c wrangler-deploy.generated.toml 2>&1 | tee deploy.log
           DEPLOY_RC=${PIPESTATUS[0]}
