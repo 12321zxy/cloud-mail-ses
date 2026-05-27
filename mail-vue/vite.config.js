@@ -53,7 +53,12 @@ export default defineConfig(({mode}) => {
         },
         build: {
             target: 'es2022',
-            outDir: env.VITE_OUT_DIR || 'dist',
+            outDir:
+                mode === 'release'
+                    ? path.resolve(__dirname, '../mail-worker/dist')
+                    : env.VITE_OUT_DIR
+                      ? path.resolve(__dirname, env.VITE_OUT_DIR)
+                      : 'dist',
             emptyOutDir: true,
             assetsInclude: ['**/*.json']
         }

@@ -28,6 +28,7 @@ mail-vue/dist
 .env
 .env.*
 !.env.example
+!.env.release
 # deploy/accounts.json 可提交（仅 environment 名，无密钥）
 mail-worker/.env.account
 mail-worker/wrangler-deploy.generated.toml

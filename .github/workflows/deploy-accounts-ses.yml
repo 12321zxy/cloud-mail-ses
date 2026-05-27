@@ -116,9 +116,16 @@ jobs:
           pnpm install --frozen-lockfile
           node node_modules/vite/bin/vite.js build --mode release
           if [ ! -f ../mail-worker/dist/index.html ]; then
+            if [ -f dist/index.html ]; then
+              echo '[WARN] 产物在 mail-vue/dist，同步到 mail-worker/dist'
+              mkdir -p ../mail-worker/dist
+              cp -a dist/. ../mail-worker/dist/
+            fi
+          fi
+          if [ ! -f ../mail-worker/dist/index.html ]; then
             echo '[ERR] mail-worker/dist 未生成，请检查 mail-vue 构建'
-            ls -la mail-worker/dist 2>/dev/null || true
-            ls -la mail-vue/dist 2>/dev/null || true
+            ls -la ../mail-worker/dist 2>/dev/null || true
+            ls -la dist 2>/dev/null || true
             exit 1
           fi
           echo '[OK] 前端静态资源: mail-worker/dist'
