@@ -37,7 +37,9 @@ git push -u origin main
 
 | Secret | 说明 |
 |--------|------|
-| `CLOUDFLARE_API_TOKEN` | 该账户 API Token（建议 Workers + D1 + KV + R2 权限） |
+| `CLOUDFLARE_API_TOKEN` | 方式 A：API Token（与 Global Key 二选一，建议 Workers + D1 + KV + R2） |
+| `CLOUDFLARE_API_KEY` | 方式 B：Global API Key（须与 `CLOUDFLARE_EMAIL` 同时配置） |
+| `CLOUDFLARE_EMAIL` | 方式 B：Cloudflare 登录邮箱 |
 | `CLOUDFLARE_ACCOUNT_ID` | 账户 ID |
 | `DOMAIN` | JSON 数组，如 `["example.com"]` |
 | `ADMIN` | 管理员邮箱，如 `admin@example.com` |

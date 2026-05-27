@@ -68,6 +68,8 @@ jobs:
       ADMIN: ${{ secrets.ADMIN }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+      CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
       KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
@@ -115,9 +117,17 @@ jobs:
             echo '[ERR] DOMAIN 须为 JSON 数组'
             exit 1
           fi
-          for v in ADMIN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN; do
+          for v in ADMIN CLOUDFLARE_ACCOUNT_ID; do
             if [ -z "${!v}" ]; then echo "[ERR] 未设置 $v"; exit 1; fi
           done
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo '[OK] 使用 CLOUDFLARE_API_TOKEN 认证'
+          elif [ -n "$CLOUDFLARE_API_KEY" ] && [ -n "$CLOUDFLARE_EMAIL" ]; then
+            echo '[OK] 使用 CLOUDFLARE_API_KEY + CLOUDFLARE_EMAIL 认证'
+          else
+            echo '[ERR] 须设置 CLOUDFLARE_API_TOKEN，或同时设置 CLOUDFLARE_API_KEY 与 CLOUDFLARE_EMAIL'
+            exit 1
+          fi
 
           CONFIG=wrangler-action.toml
           cp "$CONFIG" wrangler-deploy.generated.toml
