@@ -1,0 +1,10 @@
+[
+  {
+    "environment": "cf-main",
+    "name": "cloud-mail"
+  },
+  {
+    "environment": "cf-account-2",
+    "name": "cloud-mail"
+  }
+]

@@ -1,0 +1,170 @@
+# 多 Cloudflare 账户：每个 GitHub Environment 对应一个 CF 账户
+# 登记列表：deploy/accounts.json（从 accounts.json.example 复制）
+
+name: Deploy to CF accounts (SES)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mail-worker/**'
+      - 'mail-vue/**'
+      - 'deploy/accounts.json'
+      - '.github/workflows/deploy-accounts-ses.yml'
+  workflow_dispatch:
+
+jobs:
+  load-accounts:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set
+        run: |
+          if [[ ! -f deploy/accounts.json ]]; then
+            echo '[ERR] 缺少 deploy/accounts.json，请从 deploy/accounts.json.example 复制'
+            exit 1
+          fi
+          echo "matrix=$(jq -c . deploy/accounts.json)" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: load-accounts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        account: ${{ fromJson(needs.load-accounts.outputs.matrix) }}
+    environment: ${{ matrix.account.environment }}
+
+    env:
+      NAME: ${{ matrix.account.name }}
+      CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
+      DOMAIN: ${{ secrets.DOMAIN }}
+      ADMIN: ${{ secrets.ADMIN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+      KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: mail-worker/pnpm-lock.yaml
+
+      - name: Install mail-worker deps
+        working-directory: mail-worker
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare wrangler config
+        working-directory: mail-worker
+        run: |
+          set -e
+          if [ -z "$JWT_SECRET" ] || grep -q '[?%#/\\]' <<< "$JWT_SECRET"; then
+            echo '[ERR] JWT_SECRET 无效'
+            exit 1
+          fi
+          if ! jq -e 'type == "array"' <<< "$DOMAIN"; then
+            echo '[ERR] DOMAIN 须为 JSON 数组'
+            exit 1
+          fi
+          for v in ADMIN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN; do
+            if [ -z "${!v}" ]; then echo "[ERR] 未设置 $v"; exit 1; fi
+          done
+
+          CONFIG=wrangler-action.toml
+          cp "$CONFIG" wrangler-deploy.generated.toml
+
+          if [ -z "$R2_BUCKET_NAME" ]; then
+            sed -i '/\[\[r2_buckets\]\]/,/^$/d' wrangler-deploy.generated.toml
+          fi
+          if [ -z "$CUSTOM_DOMAIN" ]; then
+            sed -i '/\[\[routes\]\]/,/^$/d' wrangler-deploy.generated.toml
+          fi
+          sed -i '/^linuxdo_/d' wrangler-deploy.generated.toml 2>/dev/null || true
+
+          sed -i "s|\${NAME}|${NAME}|g" wrangler-deploy.generated.toml
+          sed -i "s|\${CUSTOM_DOMAIN}|${CUSTOM_DOMAIN}|g" wrangler-deploy.generated.toml
+          sed -i "s|\"\${DOMAIN}\"|${DOMAIN}|g" wrangler-deploy.generated.toml
+          sed -i "s|\${ADMIN}|${ADMIN}|g" wrangler-deploy.generated.toml
+          sed -i "s|\${JWT_SECRET}|${JWT_SECRET}|g" wrangler-deploy.generated.toml
+          sed -i "s|\${R2_BUCKET_NAME}|${R2_BUCKET_NAME}|g" wrangler-deploy.generated.toml
+          sed -i "s|\${AI_MODEL}|@cf/meta/llama-3.1-8b-instruct|g" wrangler-deploy.generated.toml
+          sed -i "s|\${ANALYSIS_CACHE}|false|g" wrangler-deploy.generated.toml
+          sed -i "s|\${PROJECT_LINK}||g" wrangler-deploy.generated.toml
+
+      - name: Ensure KV
+        working-directory: mail-worker
+        run: |
+          CONFIG=wrangler-deploy.generated.toml
+          if [ -n "$KV_NAMESPACE_ID" ]; then
+            sed -i "s|\${KV_NAMESPACE_ID}|${KV_NAMESPACE_ID}|g" "$CONFIG"
+            exit 0
+          fi
+          pnpm wrangler kv namespace list > kv.json
+          KV_ID=$(jq -r ".[] | select(.title==\"$NAME\") | .id" kv.json | head -1)
+          if [ -z "$KV_ID" ] || [ "$KV_ID" = "null" ]; then
+            pnpm wrangler kv namespace create "$NAME"
+            pnpm wrangler kv namespace list > kv.json
+            KV_ID=$(jq -r ".[] | select(.title==\"$NAME\") | .id" kv.json)
+          fi
+          sed -i "s|\${KV_NAMESPACE_ID}|${KV_ID}|g" "$CONFIG"
+
+      - name: Ensure D1
+        working-directory: mail-worker
+        run: |
+          CONFIG=wrangler-deploy.generated.toml
+          if [ -n "$D1_DATABASE_ID" ]; then
+            sed -i "s|\${D1_DATABASE_ID}|${D1_DATABASE_ID}|g" "$CONFIG"
+            exit 0
+          fi
+          pnpm wrangler d1 list --json > d1.json
+          D1_ID=$(jq -r ".[] | select(.name==\"$NAME\") | .uuid" d1.json | head -1)
+          if [ -z "$D1_ID" ] || [ "$D1_ID" = "null" ]; then
+            pnpm wrangler d1 create "$NAME"
+            pnpm wrangler d1 list --json > d1.json
+            D1_ID=$(jq -r ".[] | select(.name==\"$NAME\") | .uuid" d1.json)
+          fi
+          sed -i "s|\${D1_DATABASE_ID}|${D1_ID}|g" "$CONFIG"
+
+      - name: Deploy Worker
+        id: deploy
+        working-directory: mail-worker
+        run: |
+          pnpm wrangler deploy -c wrangler-deploy.generated.toml 2>&1 | tee deploy.log
+          WORKER_URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | tail -1 || true)
+          echo "worker_url=$WORKER_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Put AWS SES secrets
+        if: env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != ''
+        working-directory: mail-worker
+        run: |
+          echo "${AWS_REGION:-us-east-1}" | pnpm wrangler secret put AWS_REGION -c wrangler-deploy.generated.toml
+          echo "$AWS_ACCESS_KEY_ID" | pnpm wrangler secret put AWS_ACCESS_KEY_ID -c wrangler-deploy.generated.toml
+          echo "$AWS_SECRET_ACCESS_KEY" | pnpm wrangler secret put AWS_SECRET_ACCESS_KEY -c wrangler-deploy.generated.toml
+
+      - name: Init D1
+        run: |
+          WORKER_URL="${CUSTOM_DOMAIN:+https://${CUSTOM_DOMAIN}}"
+          WORKER_URL="${WORKER_URL:-${{ steps.deploy.outputs.worker_url }}}"
+          if [ -z "$WORKER_URL" ]; then
+            echo '[WARN] 无 URL，跳过 init'
+            exit 0
+          fi
+          sleep 15
+          CODE=$(curl -sL -o body.txt -w '%{http_code}' "$WORKER_URL/api/init/${JWT_SECRET}")
+          cat body.txt
+          if [ "$CODE" != "200" ]; then exit 1; fi
