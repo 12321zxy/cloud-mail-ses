@@ -105,6 +105,10 @@ jobs:
         working-directory: mail-worker
         run: pnpm install --frozen-lockfile
 
+      - name: Install mail-vue deps
+        working-directory: mail-vue
+        run: pnpm install --frozen-lockfile
+
       - name: Prepare wrangler config
         working-directory: mail-worker
         run: |
@@ -188,9 +192,20 @@ jobs:
         id: deploy
         working-directory: mail-worker
         run: |
+          set -o pipefail
           pnpm wrangler deploy -c wrangler-deploy.generated.toml 2>&1 | tee deploy.log
+          DEPLOY_RC=${PIPESTATUS[0]}
           WORKER_URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | tail -1 || true)
           echo "worker_url=$WORKER_URL" >> "$GITHUB_OUTPUT"
+          if [ "$DEPLOY_RC" -ne 0 ]; then
+            echo "[ERR] wrangler deploy 失败 (exit $DEPLOY_RC)"
+            exit "$DEPLOY_RC"
+          fi
+          if [ -z "$WORKER_URL" ]; then
+            echo "[ERR] 部署日志中未解析到 workers.dev URL"
+            exit 1
+          fi
+          echo "[OK] Worker URL: $WORKER_URL"
 
       - name: Put AWS SES secrets
         if: env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != ''
@@ -205,8 +220,8 @@ jobs:
           WORKER_URL="${CUSTOM_DOMAIN:+https://${CUSTOM_DOMAIN}}"
           WORKER_URL="${WORKER_URL:-${{ steps.deploy.outputs.worker_url }}}"
           if [ -z "$WORKER_URL" ]; then
-            echo '[WARN] 无 URL，跳过 init'
-            exit 0
+            echo '[ERR] 无 Worker URL，无法初始化 D1'
+            exit 1
           fi
           sleep 15
           CODE=$(curl -sL -o body.txt -w '%{http_code}' "$WORKER_URL/api/init/${JWT_SECRET}")

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --mode dev",
     "remote": "vite --mode remote",
-    "build": "vite build --mode release",
+    "build": "pnpm exec vite build --mode release",
     "eo": "vite build --mode eo",
     "preview": "vite preview"
   },
