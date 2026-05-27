@@ -42,4 +42,4 @@ admin = "admin@example.com"				#管理员的邮箱	示例: admin@example.com
 jwt_secret = "b7f29a1d-18e2-4d3b-941f-f6b2c97c02fd"			#jwt令牌的密钥,随便填一串字符串
 
 [build]
-command = "pnpm --prefix ../mail-vue run build && test -f dist/index.html"
+command = "cd ../mail-vue && pnpm install --frozen-lockfile && node node_modules/vite/bin/vite.js build --mode release && test -f ../mail-worker/dist/index.html"

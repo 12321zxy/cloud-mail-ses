@@ -209,6 +209,11 @@ jobs:
           fi
           sed -i "s|\${D1_DATABASE_ID}|${D1_ID}|g" "$CONFIG"
 
+      - name: Ensure workers.dev subdomain
+        env:
+          GITHUB_ENVIRONMENT_NAME: ${{ matrix.account.environment }}
+        run: bash scripts/ensure-workers-dev-subdomain.sh
+
       - name: Deploy Worker
         id: deploy
         working-directory: mail-worker
@@ -232,6 +237,21 @@ jobs:
             exit 1
           fi
           echo "[OK] Worker URL: $WORKER_URL"
+
+      - name: Enable Worker on workers.dev
+        working-directory: mail-worker
+        run: |
+          set -e
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            AUTH=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          else
+            AUTH=(-H "X-Auth-Email: $CLOUDFLARE_EMAIL" -H "X-Auth-Key: $CLOUDFLARE_API_KEY")
+          fi
+          curl -sS "${AUTH[@]}" -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$NAME/subdomain" \
+            -H 'Content-Type: application/json' \
+            -d '{"enabled":true}' | jq -e '.success == true' >/dev/null \
+            || echo '[WARN] 启用脚本 workers.dev 路由失败（若已部署可忽略）'
 
       - name: Put AWS SES secrets
         if: env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != ''
