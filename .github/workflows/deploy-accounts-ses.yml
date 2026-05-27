@@ -263,13 +263,33 @@ jobs:
 
       - name: Init D1
         run: |
+          set -e
           WORKER_URL="${CUSTOM_DOMAIN:+https://${CUSTOM_DOMAIN}}"
           WORKER_URL="${WORKER_URL:-${{ steps.deploy.outputs.worker_url }}}"
           if [ -z "$WORKER_URL" ]; then
             echo '[ERR] 无 Worker URL，无法初始化 D1'
             exit 1
           fi
-          sleep 15
-          CODE=$(curl -sL -o body.txt -w '%{http_code}' "$WORKER_URL/api/init/${JWT_SECRET}")
-          cat body.txt
-          if [ "$CODE" != "200" ]; then exit 1; fi
+          INIT_URL="${WORKER_URL%/}/api/init/${JWT_SECRET}"
+          echo "[OK] D1 初始化: ${INIT_URL%%/*}${INIT_URL#https://*/api}"
+          ok=0
+          for i in $(seq 1 30); do
+            set +e
+            CODE=$(curl -sS -o body.txt -w '%{http_code}' --connect-timeout 20 --max-time 120 "$INIT_URL" 2>curl.err)
+            CURL_RC=$?
+            set -e
+            if [ "$CURL_RC" -eq 0 ] && [ "$CODE" = "200" ]; then
+              cat body.txt
+              echo "[OK] D1 初始化完成（第 ${i} 次尝试）"
+              ok=1
+              break
+            fi
+            echo "[WARN] 第 ${i}/30 次: curl_exit=${CURL_RC} http=${CODE:-none}"
+            [ -s curl.err ] && head -3 curl.err
+            [ -s body.txt ] && head -5 body.txt
+            sleep 10
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo '[ERR] D1 初始化失败（Worker 可能尚未就绪或 JWT_SECRET 与 Worker 不一致）'
+            exit 1
+          fi
