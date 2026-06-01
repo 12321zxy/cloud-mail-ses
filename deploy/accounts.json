@@ -2,5 +2,9 @@
   {
     "environment": "us43",
     "name": "cloud-mail"
+  },
+  {
+    "environment": "us43",
+    "name": "cm-uoniopro-com"
   }
 ]
