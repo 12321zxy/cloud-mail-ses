@@ -1,16 +1,23 @@
-name: 🚀 Deploy cloud-mail to Cloudflare Workers
+# 单账户 / 仓库级 Secrets 部署（上游 cloud-mail 遗留）
+# 多 CF 账户请使用 deploy-accounts-ses.yml（读取 deploy/accounts.json + GitHub Environment）
+name: Deploy cloud-mail to Cloudflare Workers (legacy)
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "mail-worker/**"
-      - "mail-vue/**"
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: '确认使用仓库级 Secrets 部署（非 Environment 矩阵）'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
 
 jobs:
   Deploy-cloud-mail:
-    name: 🏗️ Build and Deploy
+    name: Build and Deploy
+    if: github.event.inputs.confirm == 'yes'
     runs-on: ubuntu-latest
 
     env:
