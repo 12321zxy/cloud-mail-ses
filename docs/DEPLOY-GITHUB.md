@@ -54,9 +54,17 @@ git push -u origin main
 
 | Secret | 说明 |
 |--------|------|
-| `AWS_REGION` | 与 AwsMailPanel / SES 一致 |
+| `AWS_REGION` | 与 AwsMailPanel / SES 一致（SES 发信时） |
 | `AWS_ACCESS_KEY_ID` | SES 发信 |
 | `AWS_SECRET_ACCESS_KEY` | SES 发信 |
+
+**ZeptoMail 发信**（与 AWS 二选一，可放在 Environment secrets，由 AwsMailPanel 自动同步）：
+
+| Secret | 说明 |
+|--------|------|
+| `SEND_PROVIDER` | `zeptomail` 或 `ses` |
+| `ZEPTOMAIL_TOKEN` | ZeptoMail Mail Agent Send Mail Token |
+| `ZEPTOMAIL_FROM` | 已验证域名下的默认发件人地址 |
 
 ## 3. 登记要部署的账户列表
 

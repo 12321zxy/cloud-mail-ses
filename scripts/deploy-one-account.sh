@@ -91,6 +91,16 @@ if [[ -n "${AWS_ACCESS_KEY_ID:-}" && -n "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
   echo "${AWS_REGION:-us-east-1}" | "$WRANGLER" secret put AWS_REGION -c wrangler-deploy.generated.toml
   echo "${AWS_ACCESS_KEY_ID}" | "$WRANGLER" secret put AWS_ACCESS_KEY_ID -c wrangler-deploy.generated.toml
   echo "${AWS_SECRET_ACCESS_KEY}" | "$WRANGLER" secret put AWS_SECRET_ACCESS_KEY -c wrangler-deploy.generated.toml
+  echo "ses" | "$WRANGLER" secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
+fi
+
+if [[ "${SEND_PROVIDER:-}" == "zeptomail" && -n "${ZEPTOMAIL_TOKEN:-}" ]]; then
+  echo "[OK] 写入 ZeptoMail Secrets…"
+  echo "zeptomail" | "$WRANGLER" secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
+  echo "${ZEPTOMAIL_TOKEN}" | "$WRANGLER" secret put ZEPTOMAIL_TOKEN -c wrangler-deploy.generated.toml
+  if [[ -n "${ZEPTOMAIL_FROM:-}" ]]; then
+    echo "${ZEPTOMAIL_FROM}" | "$WRANGLER" secret put ZEPTOMAIL_FROM -c wrangler-deploy.generated.toml
+  fi
 fi
 
 WORKER_URL="${CUSTOM_DOMAIN:+https://${CUSTOM_DOMAIN}}"

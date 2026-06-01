@@ -10,6 +10,7 @@ import emailUtils from '../utils/email-utils';
 import fileUtils from '../utils/file-utils';
 import { Resend } from 'resend';
 import sesService from './ses-service';
+import zeptomailService from './zeptomail-service';
 import attService from './att-service';
 import { parseHTML } from 'linkedom';
 import userService from './user-service';
@@ -232,11 +233,12 @@ const emailService = {
 
 		const domain = emailUtils.getDomain(accountRow.email);
 		const resendToken = resendTokens[domain];
-		const useSes = sesService.isConfigured(c.env);
-		const useCloudflareEmail = !!c.env.email && !useSes;
+		const useZeptomail = zeptomailService.resolveProvider(c.env) === 'zeptomail';
+		const useSes = !useZeptomail && sesService.isConfigured(c.env);
+		const useCloudflareEmail = !!c.env.email && !useSes && !useZeptomail;
 
-		//如果接收方存在站外邮箱，又没有发信服务（SES 优先）
-		if (!useSes && !useCloudflareEmail && !resendToken && !allInternal) {
+		//如果接收方存在站外邮箱，又没有发信服务（ZeptoMail / SES 优先）
+		if (!useZeptomail && !useSes && !useCloudflareEmail && !resendToken && !allInternal) {
 			throw new BizError(t('noSendProvider'));
 		}
 
@@ -262,7 +264,7 @@ const emailService = {
 
 		let sendResult = {};
 
-		//站外收件：SES（AwsMailPanel 编排）> CF Email > Resend
+		//站外收件：ZeptoMail > SES > CF Email > Resend
 		if (!allInternal) {
 			const sendParams = {
 				name,
@@ -275,7 +277,9 @@ const emailService = {
 				sendType,
 				messageId: emailRow.messageId,
 			};
-			if (useSes) {
+			if (useZeptomail) {
+				sendResult = await this.sendByZeptomail(c, sendParams);
+			} else if (useSes) {
 				sendResult = await this.sendBySes(c, sendParams);
 			} else if (useCloudflareEmail) {
 				sendResult = await this.sendByCloudflareEmail(c, sendParams);
@@ -304,7 +308,7 @@ const emailService = {
 		emailData.content = html;
 		emailData.text = text;
 		emailData.accountId = accountId;
-		emailData.status = useSes || useCloudflareEmail ? emailConst.status.DELIVERED : emailConst.status.SENT;
+		emailData.status = useSes || useZeptomail || useCloudflareEmail ? emailConst.status.DELIVERED : emailConst.status.SENT;
 		emailData.type = emailConst.type.SEND;
 		emailData.userId = userId;
 		emailData.resendEmailId = data?.id;
@@ -407,6 +411,10 @@ const emailService = {
 			];
 		}
 		return sesService.send(c.env, sendForm);
+	},
+
+	async sendByZeptomail(c, params) {
+		return zeptomailService.send(c.env, params);
 	},
 
 	async sendByCloudflareEmail(c, params) {

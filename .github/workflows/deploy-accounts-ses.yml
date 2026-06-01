@@ -77,6 +77,9 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SEND_PROVIDER: ${{ secrets.SEND_PROVIDER }}
+      ZEPTOMAIL_TOKEN: ${{ secrets.ZEPTOMAIL_TOKEN }}
+      ZEPTOMAIL_FROM: ${{ secrets.ZEPTOMAIL_FROM }}
 
     steps:
       - uses: actions/checkout@v4
@@ -260,6 +263,17 @@ jobs:
           echo "${AWS_REGION:-us-east-1}" | pnpm wrangler secret put AWS_REGION -c wrangler-deploy.generated.toml
           echo "$AWS_ACCESS_KEY_ID" | pnpm wrangler secret put AWS_ACCESS_KEY_ID -c wrangler-deploy.generated.toml
           echo "$AWS_SECRET_ACCESS_KEY" | pnpm wrangler secret put AWS_SECRET_ACCESS_KEY -c wrangler-deploy.generated.toml
+          echo "ses" | pnpm wrangler secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
+
+      - name: Put ZeptoMail secrets
+        if: env.SEND_PROVIDER == 'zeptomail' && env.ZEPTOMAIL_TOKEN != ''
+        working-directory: mail-worker
+        run: |
+          echo "zeptomail" | pnpm wrangler secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
+          echo "$ZEPTOMAIL_TOKEN" | pnpm wrangler secret put ZEPTOMAIL_TOKEN -c wrangler-deploy.generated.toml
+          if [ -n "$ZEPTOMAIL_FROM" ]; then
+            echo "$ZEPTOMAIL_FROM" | pnpm wrangler secret put ZEPTOMAIL_FROM -c wrangler-deploy.generated.toml
+          fi
 
       - name: Init D1
         run: |
