@@ -1,11 +1,60 @@
-const ZEPTOMAIL_API = 'https://api.zeptomail.com/v1.1/email';
+const DEFAULT_ZEPTOMAIL_API = 'https://api.zeptomail.com/v1.1/email';
+
+function resolveApiUrl(env) {
+  const custom = (env.ZEPTOMAIL_API || '').trim();
+  if (custom) return custom.replace(/\/$/, '');
+  return DEFAULT_ZEPTOMAIL_API;
+}
+
+function normalizeToken(raw) {
+  let token = (raw || '').trim();
+  if (!token) return '';
+  const lower = token.toLowerCase();
+  if (lower.startsWith('zoho-enczapikey ')) {
+    token = token.slice('zoho-enczapikey '.length).trim();
+  }
+  return token;
+}
+
+function parseZeptomailError(data, text, status) {
+  const err = data?.error && typeof data.error === 'object' ? data.error : {};
+  const parts = [];
+
+  if (err.code) parts.push(`code=${err.code}`);
+  if (err.message) parts.push(String(err.message).trim());
+
+  if (Array.isArray(err.details)) {
+    err.details.forEach((d) => {
+      if (!d || typeof d !== 'object') return;
+      const seg = [d.code, d.target, d.message].filter(Boolean).join(' ');
+      if (seg) parts.push(seg);
+    });
+  }
+
+  if (data?.message && typeof data.message === 'string' && !err.message) {
+    parts.push(data.message.trim());
+  }
+  if (err.request_id) parts.push(`request_id=${err.request_id}`);
+  if (data?.request_id && !err.request_id) parts.push(`request_id=${data.request_id}`);
+
+  const joined = parts.filter(Boolean).join(' | ');
+  if (joined) return joined;
+
+  const raw = (text || '').trim();
+  if (raw) return raw.slice(0, 400);
+  return `HTTP ${status}`;
+}
 
 function formatErr(e, fallback) {
-  if (e && typeof e === 'object') {
-    const msg = e.message || fallback;
-    return `${fallback}: ${msg}`;
-  }
+  const msg = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
+  if (msg) return `${fallback}: ${msg}`;
   return fallback;
+}
+
+function emailDomain(addr) {
+  const at = (addr || '').lastIndexOf('@');
+  if (at < 0) return '';
+  return addr.slice(at + 1).trim().toLowerCase();
 }
 
 async function toZeptomailAttachments(attachments = []) {
@@ -50,7 +99,7 @@ async function toBase64(attachment) {
 
 const zeptomailService = {
   isConfigured(env) {
-    return Boolean((env.ZEPTOMAIL_TOKEN || '').trim());
+    return Boolean(normalizeToken(env.ZEPTOMAIL_TOKEN));
   },
 
   resolveProvider(env) {
@@ -62,14 +111,26 @@ const zeptomailService = {
   },
 
   async send(env, params) {
-    const token = (env.ZEPTOMAIL_TOKEN || '').trim();
+    const token = normalizeToken(env.ZEPTOMAIL_TOKEN);
     if (!token) {
-      return { error: { message: '未配置 ZEPTOMAIL_TOKEN' } };
+      return { error: { message: '未配置 ZEPTOMAIL_TOKEN（需 Mail Agent Send Mail Token，非 OAuth Token）' } };
     }
 
-    const fromAddress = (params.accountEmail || env.ZEPTOMAIL_FROM || '').trim();
+    const accountEmail = (params.accountEmail || '').trim();
+    const configuredFrom = (env.ZEPTOMAIL_FROM || '').trim();
+    let fromAddress = accountEmail || configuredFrom;
     if (!fromAddress) {
-      return { error: { message: '缺少发件人地址' } };
+      return { error: { message: '缺少发件人地址（邮箱账户或 ZEPTOMAIL_FROM）' } };
+    }
+
+    const verifiedDomain = emailDomain(configuredFrom);
+    const accountDomain = emailDomain(accountEmail);
+    let replyToAccount = null;
+
+    // 发件域名须已在 Mail Agent 验证；跨域时改用 ZEPTOMAIL_FROM 并设置 reply_to
+    if (configuredFrom && accountEmail && verifiedDomain && accountDomain && accountDomain !== verifiedDomain) {
+      fromAddress = configuredFrom;
+      replyToAccount = accountEmail;
     }
 
     const body = {
@@ -77,21 +138,36 @@ const zeptomailService = {
         address: fromAddress,
         name: params.name || fromAddress.split('@')[0],
       },
-      to: params.receiveEmail.map((address) => ({
+      to: (params.receiveEmail || []).map((address) => ({
         email_address: {
           address,
           name: address.split('@')[0] || address,
         },
       })),
-      subject: params.subject || '',
+      subject: params.subject || '(无主题)',
     };
 
-    if (params.html) body.htmlbody = params.html;
-    if (params.text) body.textbody = params.text;
-    if (!params.html && !params.text) body.textbody = '';
+    if (!body.to.length) {
+      return { error: { message: '缺少收件人地址' } };
+    }
+
+    // ZeptoMail 要求 htmlbody 或 textbody 至少一项且非空
+    const html = (params.html || '').trim();
+    const text = (params.text || '').trim();
+    if (html) {
+      body.htmlbody = params.html;
+    } else if (text) {
+      body.textbody = params.text;
+    } else {
+      body.htmlbody = '<div></div>';
+    }
 
     const attachments = await toZeptomailAttachments(params.attachments || []);
     if (attachments.length > 0) body.attachments = attachments;
+
+    if (replyToAccount) {
+      body.reply_to = [{ address: replyToAccount, name: params.name || replyToAccount.split('@')[0] }];
+    }
 
     if (params.sendType === 'reply' && params.messageId) {
       body.mime_headers = {
@@ -101,7 +177,8 @@ const zeptomailService = {
     }
 
     try {
-      const res = await fetch(ZEPTOMAIL_API, {
+      const apiUrl = resolveApiUrl(env);
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -111,22 +188,24 @@ const zeptomailService = {
         body: JSON.stringify(body),
       });
 
-      const text = await res.text();
+      const textBody = await res.text();
       let data = {};
       try {
-        data = text ? JSON.parse(text) : {};
+        data = textBody ? JSON.parse(textBody) : {};
       } catch {
-        data = { raw: text };
+        data = { raw: textBody };
       }
 
-      if (!res.ok) {
-        const detail =
-          data?.error?.details?.[0]?.message ||
-          data?.error?.message ||
-          data?.message ||
-          text.slice(0, 200) ||
-          `HTTP ${res.status}`;
-        return { error: { message: `ZeptoMail 发信失败: ${detail}` } };
+      const apiError = data?.error && typeof data.error === 'object' ? data.error : null;
+      if (!res.ok || apiError) {
+        const detail = parseZeptomailError(data, textBody, res.status);
+        let hint = '';
+        if (detail.includes('SM_111') || detail.includes('not verified') || detail.includes('domain')) {
+          hint = '（请确认 ZeptoMail 中域名已验证，且发件地址属于已验证域名）';
+        } else if (res.status === 401 || res.status === 403 || detail.includes('401')) {
+          hint = '（请检查 ZEPTOMAIL_TOKEN 是否为 Send Mail Token）';
+        }
+        return { error: { message: `ZeptoMail 发信失败: ${detail}${hint}` } };
       }
 
       const messageId =
