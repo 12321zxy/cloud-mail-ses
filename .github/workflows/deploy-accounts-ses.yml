@@ -203,13 +203,7 @@ jobs:
             sed -i "s|\${D1_DATABASE_ID}|${D1_DATABASE_ID}|g" "$CONFIG"
             exit 0
           fi
-          pnpm wrangler d1 list --json > d1.json
-          D1_ID=$(jq -r ".[] | select(.name==\"$NAME\") | .uuid" d1.json | head -1)
-          if [ -z "$D1_ID" ] || [ "$D1_ID" = "null" ]; then
-            pnpm wrangler d1 create "$NAME"
-            pnpm wrangler d1 list --json > d1.json
-            D1_ID=$(jq -r ".[] | select(.name==\"$NAME\") | .uuid" d1.json)
-          fi
+          D1_ID=$(bash ../scripts/ensure-d1-id.sh "$NAME")
           sed -i "s|\${D1_DATABASE_ID}|${D1_ID}|g" "$CONFIG"
 
       - name: Ensure workers.dev subdomain

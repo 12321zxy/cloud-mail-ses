@@ -18,8 +18,12 @@ function formatErr(e, fallback) {
     const code = e.name || 'Error';
     const msg = e.message || fallback;
     const http = e.$metadata?.httpStatusCode;
-    if (http) return `${fallback} (HTTP ${http}) [${code}]: ${msg}`;
-    return `${fallback} [${code}]: ${msg}`;
+    let out = http ? `${fallback} (HTTP ${http}) [${code}]: ${msg}` : `${fallback} [${code}]: ${msg}`;
+    if (code === 'MessageRejected' && /not verified/i.test(msg)) {
+      out +=
+        '（发件域名/邮箱尚未在 SES 完成验证：请在 AwsMailPanel 任务中执行「重试 DNS」或「继续检查 SES 验证」，并在 AWS SES 控制台确认 Identity 为 Verified；沙盒账户还需验证收件人）';
+    }
+    return out;
   }
   return fallback;
 }
