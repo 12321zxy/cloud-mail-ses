@@ -220,9 +220,16 @@ jobs:
             echo '[ERR] 缺少 dist/index.html，请先完成前端构建'
             exit 1
           fi
+          SECRETS_FILE="$(mktemp)"
+          bash ../scripts/build-wrangler-secrets-file.sh "$SECRETS_FILE"
+          DEPLOY_ARGS=(-c wrangler-deploy.generated.toml)
+          if [ -s "$SECRETS_FILE" ]; then
+            DEPLOY_ARGS+=(--secrets-file "$SECRETS_FILE")
+          fi
           set -o pipefail
-          pnpm wrangler deploy -c wrangler-deploy.generated.toml 2>&1 | tee deploy.log
+          pnpm wrangler deploy "${DEPLOY_ARGS[@]}" 2>&1 | tee deploy.log
           DEPLOY_RC=${PIPESTATUS[0]}
+          rm -f "$SECRETS_FILE"
           WORKER_URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | tail -1 || true)
           echo "worker_url=$WORKER_URL" >> "$GITHUB_OUTPUT"
           if [ "$DEPLOY_RC" -ne 0 ]; then
@@ -249,25 +256,6 @@ jobs:
             -H 'Content-Type: application/json' \
             -d '{"enabled":true}' | jq -e '.success == true' >/dev/null \
             || echo '[WARN] 启用脚本 workers.dev 路由失败（若已部署可忽略）'
-
-      - name: Put AWS SES secrets
-        if: env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != ''
-        working-directory: mail-worker
-        run: |
-          echo "${AWS_REGION:-us-east-1}" | pnpm wrangler secret put AWS_REGION -c wrangler-deploy.generated.toml
-          echo "$AWS_ACCESS_KEY_ID" | pnpm wrangler secret put AWS_ACCESS_KEY_ID -c wrangler-deploy.generated.toml
-          echo "$AWS_SECRET_ACCESS_KEY" | pnpm wrangler secret put AWS_SECRET_ACCESS_KEY -c wrangler-deploy.generated.toml
-          echo "ses" | pnpm wrangler secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
-
-      - name: Put ZeptoMail secrets
-        if: env.SEND_PROVIDER == 'zeptomail' && env.ZEPTOMAIL_TOKEN != ''
-        working-directory: mail-worker
-        run: |
-          echo "zeptomail" | pnpm wrangler secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
-          echo "$ZEPTOMAIL_TOKEN" | pnpm wrangler secret put ZEPTOMAIL_TOKEN -c wrangler-deploy.generated.toml
-          if [ -n "$ZEPTOMAIL_FROM" ]; then
-            echo "$ZEPTOMAIL_FROM" | pnpm wrangler secret put ZEPTOMAIL_FROM -c wrangler-deploy.generated.toml
-          fi
 
       - name: Init D1
         run: |

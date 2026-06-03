@@ -84,24 +84,14 @@ if [[ -z "${R2_BUCKET_NAME:-}" ]]; then
 fi
 
 echo "[OK] 部署 Worker…"
-"$WRANGLER" deploy -c wrangler-deploy.generated.toml 2>&1 | tee deploy.log
-
-if [[ -n "${AWS_ACCESS_KEY_ID:-}" && -n "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
-  echo "[OK] 写入 SES Secrets…"
-  echo "${AWS_REGION:-us-east-1}" | "$WRANGLER" secret put AWS_REGION -c wrangler-deploy.generated.toml
-  echo "${AWS_ACCESS_KEY_ID}" | "$WRANGLER" secret put AWS_ACCESS_KEY_ID -c wrangler-deploy.generated.toml
-  echo "${AWS_SECRET_ACCESS_KEY}" | "$WRANGLER" secret put AWS_SECRET_ACCESS_KEY -c wrangler-deploy.generated.toml
-  echo "ses" | "$WRANGLER" secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
+SECRETS_FILE="$(mktemp)"
+bash "$ROOT/scripts/build-wrangler-secrets-file.sh" "$SECRETS_FILE"
+DEPLOY_ARGS=(-c wrangler-deploy.generated.toml)
+if [[ -s "$SECRETS_FILE" ]]; then
+  DEPLOY_ARGS+=(--secrets-file "$SECRETS_FILE")
 fi
-
-if [[ "${SEND_PROVIDER:-}" == "zeptomail" && -n "${ZEPTOMAIL_TOKEN:-}" ]]; then
-  echo "[OK] 写入 ZeptoMail Secrets…"
-  echo "zeptomail" | "$WRANGLER" secret put SEND_PROVIDER -c wrangler-deploy.generated.toml
-  echo "${ZEPTOMAIL_TOKEN}" | "$WRANGLER" secret put ZEPTOMAIL_TOKEN -c wrangler-deploy.generated.toml
-  if [[ -n "${ZEPTOMAIL_FROM:-}" ]]; then
-    echo "${ZEPTOMAIL_FROM}" | "$WRANGLER" secret put ZEPTOMAIL_FROM -c wrangler-deploy.generated.toml
-  fi
-fi
+"$WRANGLER" deploy "${DEPLOY_ARGS[@]}" 2>&1 | tee deploy.log
+rm -f "$SECRETS_FILE"
 
 WORKER_URL="${CUSTOM_DOMAIN:+https://${CUSTOM_DOMAIN}}"
 if [[ -z "$WORKER_URL" ]]; then
