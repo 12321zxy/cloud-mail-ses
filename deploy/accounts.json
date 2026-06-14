@@ -10,5 +10,9 @@
   {
     "environment": "us46",
     "name": "cm-ccmhprime-com"
+  },
+  {
+    "environment": "ind26",
+    "name": "cm-gotepro-com"
   }
 ]
