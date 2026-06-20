@@ -14,5 +14,9 @@
   {
     "environment": "ind26",
     "name": "cm-gotepro-com"
+  },
+  {
+    "environment": "us40",
+    "name": "cm-signalspheremax-com"
   }
 ]
