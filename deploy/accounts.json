@@ -18,5 +18,9 @@
   {
     "environment": "us40",
     "name": "cm-signalspheremax-com"
+  },
+  {
+    "environment": "us48",
+    "name": "cm-vertexaedge-com"
   }
 ]
