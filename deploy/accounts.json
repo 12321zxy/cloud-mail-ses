@@ -26,5 +26,9 @@
   {
     "environment": "ind25",
     "name": "cm-brnovaedge-com"
+  },
+  {
+    "environment": "ind25",
+    "name": "cm-brnovaprime-com"
   }
 ]
