@@ -34,5 +34,9 @@
   {
     "environment": "us42",
     "name": "cm-atlasinvltdmax-com"
+  },
+  {
+    "environment": "us42",
+    "name": "cm-atlasinvltdpro-com"
   }
 ]
