@@ -186,13 +186,7 @@ jobs:
             sed -i "s|\${KV_NAMESPACE_ID}|${KV_NAMESPACE_ID}|g" "$CONFIG"
             exit 0
           fi
-          pnpm wrangler kv namespace list > kv.json
-          KV_ID=$(jq -r ".[] | select(.title==\"$NAME\") | .id" kv.json | head -1)
-          if [ -z "$KV_ID" ] || [ "$KV_ID" = "null" ]; then
-            pnpm wrangler kv namespace create "$NAME"
-            pnpm wrangler kv namespace list > kv.json
-            KV_ID=$(jq -r ".[] | select(.title==\"$NAME\") | .id" kv.json)
-          fi
+          KV_ID="$(bash ../scripts/ensure-kv-id.sh "$NAME")"
           sed -i "s|\${KV_NAMESPACE_ID}|${KV_ID}|g" "$CONFIG"
 
       - name: Ensure D1

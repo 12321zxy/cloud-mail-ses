@@ -50,11 +50,7 @@ if [[ -z "${D1_DATABASE_ID:-}" ]]; then
 fi
 
 if [[ -z "${KV_NAMESPACE_ID:-}" ]]; then
-  KV_NAMESPACE_ID="$("$WRANGLER" kv namespace list 2>/dev/null | jq -r ".[] | select(.title==\"$NAME\") | .id" | head -1)"
-  if [[ -z "$KV_NAMESPACE_ID" || "$KV_NAMESPACE_ID" == "null" ]]; then
-    "$WRANGLER" kv namespace create "$NAME"
-    KV_NAMESPACE_ID="$("$WRANGLER" kv namespace list | jq -r ".[] | select(.title==\"$NAME\") | .id")"
-  fi
+  KV_NAMESPACE_ID="$(bash "$ROOT/scripts/ensure-kv-id.sh" "$NAME")"
 fi
 
 sed -e "s|\${NAME}|${NAME}|g" \
