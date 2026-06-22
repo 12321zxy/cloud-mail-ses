@@ -22,5 +22,9 @@
   {
     "environment": "us48",
     "name": "cm-vertexaedge-com"
+  },
+  {
+    "environment": "ind25",
+    "name": "cm-brnovaedge-com"
   }
 ]
