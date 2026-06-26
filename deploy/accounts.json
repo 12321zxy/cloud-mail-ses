@@ -38,5 +38,9 @@
   {
     "environment": "us42",
     "name": "cm-atlasinvltdpro-com"
+  },
+  {
+    "environment": "otc4",
+    "name": "cm-mxaedge-com"
   }
 ]
