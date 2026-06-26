@@ -42,5 +42,9 @@
   {
     "environment": "otc4",
     "name": "cm-mxaedge-com"
+  },
+  {
+    "environment": "us27",
+    "name": "cm-vfaprivatewealth-com"
   }
 ]
