@@ -46,5 +46,9 @@
   {
     "environment": "us41",
     "name": "cm-gsetrwapro-com"
+  },
+  {
+    "environment": "pe1",
+    "name": "cm-apamvault-com"
   }
 ]
