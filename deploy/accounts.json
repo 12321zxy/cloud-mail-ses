@@ -50,5 +50,9 @@
   {
     "environment": "pe1",
     "name": "cm-apamvault-com"
+  },
+  {
+    "environment": "us47",
+    "name": "cm-apex-web-com"
   }
 ]
