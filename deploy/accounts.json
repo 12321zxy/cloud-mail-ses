@@ -58,5 +58,9 @@
   {
     "environment": "us45",
     "name": "cm-xeriqmax-com"
+  },
+  {
+    "environment": "us49",
+    "name": "cm-nexcoedge-com"
   }
 ]
