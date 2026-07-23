@@ -34,7 +34,8 @@ not_found_handling = "single-page-application"
 run_worker_first = true
 
 [triggers]
-crons = ["*/30 * * * *", "0 16 * * *"]
+# 仅 1 条 cron（账户配额按「条数」计；多 Worker 部署默认会 strip 掉本段，见 scripts/strip-wrangler-cron-triggers.sh）
+crons = ["*/30 * * * *"]
 
 
 [vars]

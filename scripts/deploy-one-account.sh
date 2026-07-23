@@ -79,6 +79,8 @@ if [[ -z "${R2_BUCKET_NAME:-}" ]]; then
     sed -i '/\[\[r2_buckets\]\]/,/^$/d' wrangler-deploy.generated.toml
 fi
 
+bash "$ROOT/scripts/strip-wrangler-cron-triggers.sh" wrangler-deploy.generated.toml
+
 echo "[OK] 部署 Worker…"
 SECRETS_FILE="$(mktemp)"
 bash "$ROOT/scripts/build-wrangler-secrets-file.sh" "$SECRETS_FILE"

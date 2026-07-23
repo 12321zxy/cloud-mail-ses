@@ -25,15 +25,19 @@ export default {
 	},
 	email: email,
 	async scheduled(c, env, ctx) {
-		if (c.cron === '*/30 * * * *') {
-			await analysisService.refreshEchartsCache({ env })
-			return;
-		}
+		await analysisService.refreshEchartsCache({ env });
 
-		await verifyRecordService.clearRecord({ env })
-		await userService.resetDaySendCount({ env })
-		await emailService.completeReceiveAll({ env })
-		await oauthService.clearNoBindOathUser({ env })
-		await analysisService.refreshEchartsCache({ env })
+		// 原 0 16 * * * 每日任务：合并进 */30 cron，用 KV 保证每天只跑一次
+		const dayKey = new Date().toISOString().slice(0, 10);
+		const dailyFlag = `cron_daily:${dayKey}`;
+		const ranDaily = await env.kv.get(dailyFlag);
+		const utcHour = new Date().getUTCHours();
+		if (!ranDaily && utcHour === 16) {
+			await env.kv.put(dailyFlag, '1', { expirationTtl: 60 * 60 * 48 });
+			await verifyRecordService.clearRecord({ env });
+			await userService.resetDaySendCount({ env });
+			await emailService.completeReceiveAll({ env });
+			await oauthService.clearNoBindOathUser({ env });
+		}
 	},
 };

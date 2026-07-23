@@ -18,6 +18,10 @@ elif [[ "${SEND_PROVIDER:-}" == 'zeptomail' && -n "${ZEPTOMAIL_TOKEN:-}" ]]; the
   fi
 fi
 
+if [[ -n "${INBOUND_WEBHOOK_SECRET:-}" ]]; then
+  printf '%s=%s\n' INBOUND_WEBHOOK_SECRET "$INBOUND_WEBHOOK_SECRET" >> "$OUT"
+fi
+
 if [[ -s "$OUT" ]]; then
   echo "[OK] Secrets 文件已生成（$(wc -l < "$OUT" | tr -d ' ') 项）"
 else

@@ -56,6 +56,10 @@ npx wrangler secret put ZEPTOMAIL_FROM  # 已验证域名下的发件人地址
 
 在**域名所在 CF 账户**开启 Email Routing Catch-all → Worker `cloud-mail`；DNS 可用 AwsMailPanel 编排。
 
+### 可选：AWS SES Inbound 收件
+
+不经过 Email Routing 时，配置 Worker Secret `INBOUND_WEBHOOK_SECRET`，由 Lambda POST 到 `/api/inbound/ses`。详见 [docs/SES-INBOUND.md](docs/SES-INBOUND.md)。未配置时行为与上游完全一致。
+
 ## 说明
 
 - 未配置 SES / ZeptoMail 时行为与上游一致（CF Email / Resend）。

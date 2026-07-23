@@ -120,3 +120,27 @@ cp ../deploy/account.env.example .env.account
 # 编辑 .env.account 后：
 ../scripts/deploy-one-account.sh
 ```
+
+## 9. 部署报错：cron triggers 超过 5 条（code 10072）
+
+Cloudflare **免费/基础计划**下，**整个账户**最多 **5 条** Cron Trigger（不是 5 个 Worker）。
+
+每个 cloud-mail Worker 若在 `wrangler` 里配置了 cron，部署时会向 `/workers/scripts/…/schedules` 注册；以前每个 Worker 有 **2 条** cron（`*/30` + `0 16`），同一账户部署 **3 个以上** `cm-*` Worker 就会触发：
+
+```text
+You have exceeded the limit of 5 cron triggers [code: 10072]
+```
+
+### 本仓库已做的处理（需 push 后 Actions 才生效）
+
+1. **合并为 1 条 cron**（仅当启用 cron 时）：`*/30 * * * *`，日任务在 `scheduled` 里用 KV 去重。
+2. **GitHub / 本机部署默认去掉 `[triggers]`**：`scripts/strip-wrangler-cron-triggers.sh`（不影响收件/发信，仅影响定时刷新统计、日清理等）。
+3. 若**确实需要**某一个 Worker 跑定时任务：在该 GitHub Environment 增加 Secret **`ENABLE_CRON_TRIGGERS=true`**（**同一 CF 账户只给一个 Environment 开**，占 1 条配额）。
+
+### 你现在要做的
+
+1. 将含上述改动的 **cloud-mail-ses** push 到 GitHub。
+2. 重新运行部署 `cm-uoppo-com` 的 workflow。
+3. 若仍报 10072：到 Cloudflare 控制台 → Workers → 各旧 `cm-*` → **Triggers → Cron**，手动删掉多余 cron，或对旧 Worker **再部署一次**（新脚本会去掉 cron 注册以释放配额）。
+
+升级 [Workers Paid 计划](https://developers.cloudflare.com/workers/platform/limits/#account-plan-limits) 可提高 cron 上限；多域名场景仍建议**默认不注册 cron**。
