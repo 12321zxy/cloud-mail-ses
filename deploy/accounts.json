@@ -1,13 +1,5 @@
 [
   {
-    "environment": "us43",
-    "name": "cloud-mail"
-  },
-  {
-    "environment": "us43",
-    "name": "cm-uoniopro-com"
-  },
-  {
     "environment": "us46",
     "name": "cm-ccmhprime-com"
   },
@@ -62,5 +54,9 @@
   {
     "environment": "us49",
     "name": "cm-nexcoedge-com"
+  },
+  {
+    "environment": "us43",
+    "name": "cm-uoniopro-com"
   }
 ]
