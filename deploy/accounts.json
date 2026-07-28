@@ -62,5 +62,9 @@
   {
     "environment": "us52",
     "name": "cm-hgsllcprime-com"
+  },
+  {
+    "environment": "sp6",
+    "name": "cm-artisanptmax-com"
   }
 ]
