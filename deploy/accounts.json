@@ -66,5 +66,9 @@
   {
     "environment": "sp6",
     "name": "cm-artisanptmax-com"
+  },
+  {
+    "environment": "sg1",
+    "name": "cm-toponevault-com"
   }
 ]
