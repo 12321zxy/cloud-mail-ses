@@ -32,10 +32,6 @@
     "name": "cm-mxaedge-com"
   },
   {
-    "environment": "us27",
-    "name": "cm-vfaprivatewealth-com"
-  },
-  {
     "environment": "us41",
     "name": "cm-gsetrwapro-com"
   },
@@ -70,5 +66,9 @@
   {
     "environment": "sg1",
     "name": "cm-toponevault-com"
+  },
+  {
+    "environment": "us27",
+    "name": "cm-vfaprivatewealth-com"
   }
 ]
