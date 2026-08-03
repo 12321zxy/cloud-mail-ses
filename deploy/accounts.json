@@ -60,15 +60,15 @@
     "name": "cm-hgsllcprime-com"
   },
   {
-    "environment": "sp6",
-    "name": "cm-artisanptmax-com"
-  },
-  {
     "environment": "sg1",
     "name": "cm-toponevault-com"
   },
   {
     "environment": "us27",
     "name": "cm-vfaprivatewealth-com"
+  },
+  {
+    "environment": "sp6",
+    "name": "cm-atptmax-com"
   }
 ]
