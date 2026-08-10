@@ -74,5 +74,9 @@
   {
     "environment": "us53",
     "name": "cm-dealerwebelite-com"
+  },
+  {
+    "environment": "ar2",
+    "name": "cm-wises7prime-com"
   }
 ]
