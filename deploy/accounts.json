@@ -78,5 +78,9 @@
   {
     "environment": "ar2",
     "name": "cm-wises7prime-com"
+  },
+  {
+    "environment": "us28",
+    "name": "cm-zeroexprime-com"
   }
 ]
