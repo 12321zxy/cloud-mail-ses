@@ -40,10 +40,6 @@
     "name": "cm-apamvault-com"
   },
   {
-    "environment": "us47",
-    "name": "cm-apex-web-com"
-  },
-  {
     "environment": "us45",
     "name": "cm-xeriqmax-com"
   },
@@ -82,5 +78,9 @@
   {
     "environment": "us28",
     "name": "cm-zeroexprime-com"
+  },
+  {
+    "environment": "us47",
+    "name": "cm-apexcoedge-com"
   }
 ]
