@@ -64,10 +64,6 @@
     "name": "cm-vfaprivatewealth-com"
   },
   {
-    "environment": "sp6",
-    "name": "cm-atptmax-com"
-  },
-  {
     "environment": "us53",
     "name": "cm-dealerwebelite-com"
   },
@@ -82,5 +78,9 @@
   {
     "environment": "us47",
     "name": "cm-apexcoedge-com"
+  },
+  {
+    "environment": "sp6",
+    "name": "cm-atlasinvcopro-com"
   }
 ]
