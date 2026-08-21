@@ -82,5 +82,9 @@
   {
     "environment": "sp6",
     "name": "cm-atlasinvcopro-com"
+  },
+  {
+    "environment": "ind27",
+    "name": "cm-nvmscprime-com"
   }
 ]
