@@ -86,5 +86,9 @@
   {
     "environment": "ind27",
     "name": "cm-nvmscprime-com"
+  },
+  {
+    "environment": "us54",
+    "name": "cm-cstmmax-com"
   }
 ]
