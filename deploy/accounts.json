@@ -90,5 +90,9 @@
   {
     "environment": "us54",
     "name": "cm-cstmmax-com"
+  },
+  {
+    "environment": "ind28",
+    "name": "cm-altrasol-com"
   }
 ]
