@@ -120,6 +120,7 @@ const zh = {
     delayed: '发送被延迟',
     bounced: '发送失败',
     attachments: '附件列表',
+    unnamedAttachment: '未命名附件',
     attCount: '共 {total} 个',
     emailCount: '共 {total} 封',
     error404: '404错误, 找不到页面',

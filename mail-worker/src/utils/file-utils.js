@@ -1,10 +1,24 @@
 const fileUtils = {
 	getExtFileName(filename) {
-		try {
-			const index = filename.lastIndexOf('.');
-			return index !== -1 ? filename.slice(index) : '';
-		} catch (e) {
-			return ''
+		if (typeof filename !== 'string') return '';
+		const index = filename.lastIndexOf('.');
+		return index !== -1 ? filename.slice(index) : '';
+	},
+
+	getAttachmentFileName(filename, mimeType) {
+		const normalized = typeof filename === 'string' ? filename.trim() : '';
+		if (normalized) return normalized;
+		const normalizedMimeType = typeof mimeType === 'string' ? mimeType.toLowerCase() : '';
+
+		switch (normalizedMimeType) {
+			case 'message/delivery-status':
+				return 'delivery-status.txt';
+			case 'message/feedback-report':
+				return 'feedback-report.txt';
+			case 'message/rfc822':
+				return 'original-message.eml';
+			default:
+				return 'attachment';
 		}
 	},
 
@@ -66,4 +80,3 @@ const fileUtils = {
 
 
 export default fileUtils;
-

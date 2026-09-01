@@ -120,6 +120,7 @@ const en = {
     delayed: 'Delayed',
     bounced: 'Bounced',
     attachments: 'Attachments',
+    unnamedAttachment: 'Unnamed attachment',
     attCount: 'Total {total}',
     emailCount: 'Total {total}',
     error404: '404 Not Found',
