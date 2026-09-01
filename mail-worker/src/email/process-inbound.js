@@ -150,10 +150,11 @@ export async function processInboundMime(c, opts) {
 
 	for (const item of parsed.attachments || []) {
 		const attachment = { ...item };
+		attachment.filename = fileUtils.getAttachmentFileName(item.filename, item.mimeType);
 		attachment.key =
 			constant.ATTACHMENT_PREFIX +
 			(await fileUtils.getBuffHash(attachment.content)) +
-			fileUtils.getExtFileName(item.filename);
+			fileUtils.getExtFileName(attachment.filename);
 		attachment.size = item.content?.length ?? item.content?.byteLength;
 		attachments.push(attachment);
 		if (attachment.contentId) {

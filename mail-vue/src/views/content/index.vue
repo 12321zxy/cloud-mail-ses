@@ -50,7 +50,7 @@
                   <Icon v-bind="getIconByName(att.filename)" />
                 </div>
                 <div class="att-name" @click="showImage(att.key)">
-                  {{ att.filename }}
+                  {{ att.filename || $t('unnamedAttachment') }}
                 </div>
                 <div class="att-size">{{ formatBytes(att.size) }}</div>
                 <div class="opt-icon att-icon">
