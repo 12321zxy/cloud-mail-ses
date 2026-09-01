@@ -94,5 +94,9 @@
   {
     "environment": "ind28",
     "name": "cm-altrasol-com"
+  },
+  {
+    "environment": "us55",
+    "name": "cm-captlxmax-com"
   }
 ]
