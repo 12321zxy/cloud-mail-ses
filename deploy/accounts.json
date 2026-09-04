@@ -60,10 +60,6 @@
     "name": "cm-toponevault-com"
   },
   {
-    "environment": "us27",
-    "name": "cm-vfaprivatewealth-com"
-  },
-  {
     "environment": "us53",
     "name": "cm-dealerwebelite-com"
   },
@@ -98,5 +94,9 @@
   {
     "environment": "us55",
     "name": "cm-captlxmax-com"
+  },
+  {
+    "environment": "us27",
+    "name": "cm-privatewealthvfa-com"
   }
 ]
