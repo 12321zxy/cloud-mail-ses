@@ -48,10 +48,6 @@
     "name": "cm-nexcoedge-com"
   },
   {
-    "environment": "us43",
-    "name": "cm-uoppo-com"
-  },
-  {
     "environment": "us52",
     "name": "cm-hgsllcprime-com"
   },
@@ -98,5 +94,9 @@
   {
     "environment": "us27",
     "name": "cm-privatewealthvfa-com"
+  },
+  {
+    "environment": "us43",
+    "name": "cm-usomg-com"
   }
 ]
