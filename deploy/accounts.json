@@ -98,5 +98,9 @@
   {
     "environment": "us43",
     "name": "cm-usomg-com"
+  },
+  {
+    "environment": "us56",
+    "name": "cm-louxinecap-com"
   }
 ]
