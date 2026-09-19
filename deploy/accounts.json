@@ -102,5 +102,9 @@
   {
     "environment": "us56",
     "name": "cm-louxinecap-com"
+  },
+  {
+    "environment": "cf-account",
+    "name": "cm-pinnacletrailerusa-com"
   }
 ]
