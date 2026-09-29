@@ -106,5 +106,9 @@
   {
     "environment": "cf-account",
     "name": "cm-pinnacletrailerusa-com"
+  },
+  {
+    "environment": "us51",
+    "name": "cm-snemcap-com"
   }
 ]
