@@ -110,5 +110,9 @@
   {
     "environment": "us51",
     "name": "cm-snemcap-com"
+  },
+  {
+    "environment": "ar3",
+    "name": "cm-amvacap-com"
   }
 ]
