@@ -122,5 +122,9 @@
   {
     "environment": "sp7",
     "name": "cm-ampbcap-com"
+  },
+  {
+    "environment": "us60",
+    "name": "cm-emberstonecap-com"
   }
 ]
