@@ -114,5 +114,9 @@
   {
     "environment": "ar3",
     "name": "cm-amvacap-com"
+  },
+  {
+    "environment": "mx13",
+    "name": "cm-actinexafin-com"
   }
 ]
