@@ -118,5 +118,9 @@
   {
     "environment": "mx13",
     "name": "cm-actinexafin-com"
+  },
+  {
+    "environment": "sp7",
+    "name": "cm-ampbcap-com"
   }
 ]
