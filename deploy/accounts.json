@@ -130,5 +130,9 @@
   {
     "environment": "us57",
     "name": "cm-bsgcap-com"
+  },
+  {
+    "environment": "us58",
+    "name": "cm-vdmexcap-com"
   }
 ]
