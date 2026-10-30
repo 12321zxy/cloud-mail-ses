@@ -132,15 +132,15 @@
     "name": "cm-bsgcap-com"
   },
   {
-    "environment": "us58",
-    "name": "cm-vdmexcap-com"
-  },
-  {
     "environment": "mx14",
     "name": "cm-citxcap-com"
   },
   {
     "environment": "us62",
     "name": "cm-enscappro-com"
+  },
+  {
+    "environment": "us58",
+    "name": "cm-vdmexfin-com"
   }
 ]
