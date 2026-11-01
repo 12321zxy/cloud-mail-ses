@@ -142,5 +142,9 @@
   {
     "environment": "us58",
     "name": "cm-vdmexfin-com"
+  },
+  {
+    "environment": "us59",
+    "name": "cm-npxcaps-com"
   }
 ]
