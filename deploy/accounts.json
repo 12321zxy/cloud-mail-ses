@@ -52,10 +52,6 @@
     "name": "cm-toponevault-com"
   },
   {
-    "environment": "us53",
-    "name": "cm-dealerwebelite-com"
-  },
-  {
     "environment": "ar2",
     "name": "cm-wises7prime-com"
   },
@@ -146,5 +142,9 @@
   {
     "environment": "us45",
     "name": "cm-xerimanage-com"
+  },
+  {
+    "environment": "us53",
+    "name": "cm-dwprofin-com"
   }
 ]
