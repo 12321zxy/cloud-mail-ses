@@ -150,5 +150,9 @@
   {
     "environment": "us61",
     "name": "cm-qervcap-com"
+  },
+  {
+    "environment": "xxvpn",
+    "name": "cm-xxvpn-app"
   }
 ]
