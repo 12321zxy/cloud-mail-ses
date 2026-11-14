@@ -60,10 +60,6 @@
     "name": "cm-zeroexprime-com"
   },
   {
-    "environment": "us47",
-    "name": "cm-apexcoedge-com"
-  },
-  {
     "environment": "sp6",
     "name": "cm-atlasinvcopro-com"
   },
@@ -154,5 +150,9 @@
   {
     "environment": "xxvpn",
     "name": "cm-xxvpn-app"
+  },
+  {
+    "environment": "us47",
+    "name": "cm-apexelitepro-com"
   }
 ]
