@@ -154,5 +154,9 @@
   {
     "environment": "us47",
     "name": "cm-apexelitepro-com"
+  },
+  {
+    "environment": "ar4",
+    "name": "cm-scultralcap-com"
   }
 ]
